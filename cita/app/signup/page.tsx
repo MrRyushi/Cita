@@ -8,27 +8,40 @@ import {
 } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
 import { auth, db } from "../../firebase/firebase";
-import { setDoc, doc } from "firebase/firestore"; 
+import { setDoc, doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Signup = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertDescription, setAlertDescription] = useState("");
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertType, setAlertType] = useState<"success" | "error">("error");
 
   async function registerUser(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (password !== repeatPassword) {
-      alert("Passwords do not match");
+      setAlertTitle("Password Mismatch");
+      setAlertDescription("The passwords you entered do not match.");
+      setAlertType("error");
+      setShowAlert(true);
       return;
     }
 
     try {
       const methods = await fetchSignInMethodsForEmail(auth, email);
       if (methods.length > 0) {
-        alert("This email is already registered. Try logging in instead.");
+        setAlertTitle("Email Already Registered");
+        setAlertDescription(
+          "This email is already registered. Please log in instead."
+        );
+        setShowAlert(true);
+        setAlertType("error");
         return;
       }
 
@@ -39,7 +52,10 @@ const Signup = () => {
       );
 
       //alert("Account created:" + userCredential.user.uid);
-      alert("Account created successfully!");
+      setAlertTitle("Account Created");
+      setAlertDescription("Your account has been successfully created.");
+      setShowAlert(true);
+      setAlertType("success");
 
       // create user in firestore
       try {
@@ -47,7 +63,7 @@ const Signup = () => {
           name: "",
           age: null,
           sex: "",
-          into:  "",
+          into: "",
           bio: "",
           interests: [],
           photoURL: "",
@@ -62,18 +78,31 @@ const Signup = () => {
       router.push("/login");
     } catch (error: unknown) {
       console.error("Registration error:", error);
+      setAlertType("error");
       if (error instanceof FirebaseError) {
         if (error.code === "auth/email-already-in-use") {
-          alert("This email is already registered. Please log in instead.");
+          setAlertTitle("Email Already Registered");
+          setAlertDescription(
+            "This email is already registered. Please log in instead."
+          );
+          setShowAlert(true);
         } else if (error.code === "auth/invalid-email") {
-          alert("Please enter a valid email address.");
+          setAlertTitle("Invalid Email");
+          setAlertDescription("Please enter a valid email address.");
+          setShowAlert(true);
         } else if (error.code === "auth/weak-password") {
-          alert("Your password is too weak. Try using at least 6 characters.");
+          setAlertTitle("Weak Password");
+          setAlertDescription("Your password should be at least 6 characters.");
+          setShowAlert(true);
         } else {
-          alert("Something went wrong. Please try again later.");
+          setAlertTitle("Registration Error");
+          setAlertDescription("An error occurred during registration.");
+          setShowAlert(true);
         }
       } else {
-        alert("Something went wrong. Please try again later.");
+        setAlertTitle("Registration Error");
+        setAlertDescription("An error occurred during registration.");
+        setShowAlert(true);
       }
     }
   }
@@ -84,6 +113,18 @@ const Signup = () => {
         <h1 className="font-medium text-2xl text-center">Signup</h1>
         <p className="text-center">Create your account</p>
         <form onSubmit={registerUser} className="flex flex-col space-y-5">
+          {showAlert && (
+            <Alert
+              className={
+                alertType === "success"
+                  ? "border-green-500 text-green-700 bg-green-50"
+                  : "border-red-500 text-red-700 bg-red-50"
+              }
+            >
+              <AlertTitle>{alertTitle}</AlertTitle>
+              <AlertDescription>{alertDescription}</AlertDescription>
+            </Alert>
+          )}
           <div className="flex flex-col space-y-2">
             <label htmlFor="email">Email</label>
             <input
@@ -131,7 +172,7 @@ const Signup = () => {
           </button>
           <Link
             href="/login"
-            className="text-center text-sm text-red-400 hover:underline"
+            className="text-center text-sm text-blue-500 hover:underline"
           >
             Already have an account? Login here.
           </Link>

@@ -58,7 +58,7 @@ const Login = () => {
           </div>
 
           <button className="bg-[#4b4b4b] py-2 rounded-lg text-white">Login</button>
-          <Link href="/signup" className="text-center text-sm text-red-500 hover:underline">
+          <Link href="/signup" className="text-center text-sm text-blue-500 hover:underline">
             {"Don't"} have an account? Sign up
           </Link>
         </form>
