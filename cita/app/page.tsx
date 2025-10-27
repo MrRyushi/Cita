@@ -1,9 +1,12 @@
+import AuthGuard from "@/components/AuthGuard";
 
 
 export default function Home() {
   return (
-    <div className="">
-      
-    </div>
+    <AuthGuard>
+      <div className="">
+        
+      </div>
+    </AuthGuard>
   );
 }
