@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { collection, query, where, getDocs } from "firebase/firestore";
 
+
 export default function Home() {
   const user = auth.currentUser;
   const router = useRouter();
