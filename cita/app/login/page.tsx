@@ -2,12 +2,13 @@
 import React from "react";
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../firebase/firebase";
+import { auth, db } from "../../firebase/firebase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CircleAlert, CircleCheck } from "lucide-react";
 import GuestGuard from "@/components/GuestGuard";
+import { doc, getDoc } from "firebase/firestore";
 
 const Login = () => {
   const router = useRouter();
@@ -21,18 +22,43 @@ const Login = () => {
   async function signIn(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     try {
+      // sign in the user using firebase function
       await signInWithEmailAndPassword(auth, email, password);
+      // alert frontend
       setAlertTitle("Successfully Logged In!");
       setAlertDescription(
         "All set! Your next match might just be a click away"
       );
       setShowAlert(true);
       setAlertType("success");
-      setTimeout(() => {
-        router.push("/onboarding");
-      }, 1500);
+
+      const userId = auth.currentUser?.uid;
+
+      if (!userId) {
+        console.error("User not authenticated");
+        return;
+      }
+
+      const docRef = doc(db, "users", userId);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        // do something
+      } else {
+        
+        console.log("No such document!");
+      }
+  
+      if(docSnap.data()?.newUser){
+        router.push("/onboarding");  
+      } else {
+        router.push("/")
+      }
+
     } catch (err) {
       console.log(err);
+
+      // alert frontend
       setAlertTitle("Login Failed");
       setAlertType("error");
       let message = "An unexpected error occurred";
@@ -51,6 +77,7 @@ const Login = () => {
             message = anyErr?.message || message;
         }
       } else {
+        // alert frontend
         message =
           typeof err === "string"
             ? err

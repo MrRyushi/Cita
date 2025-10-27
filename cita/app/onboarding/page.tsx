@@ -75,6 +75,7 @@ const Onboarding = () => {
           into,
           bio,
           photoURL,
+          newUser: false
         },
         { merge: true }
       );

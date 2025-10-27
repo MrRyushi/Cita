@@ -52,6 +52,7 @@ const Signup = () => {
         email,
         password
       );
+      await auth.signOut();
 
       //alert("Account created:" + userCredential.user.uid);
       setAlertTitle("Account Created");
@@ -70,13 +71,17 @@ const Signup = () => {
           photoURL: "",
           likedUsers: [],
           passes: [],
+          newUser: true
         });
         console.log("Document written with ID: ", userCredential.user.uid);
       } catch (e) {
         console.error("Error adding document: ", e);
       }
 
-      router.push("/login");
+      setTimeout(() => {
+        router.push("/login");
+      }, 3000)
+      
     } catch (error: unknown) {
       console.error("Registration error:", error);
       setAlertType("error");
