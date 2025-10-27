@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { AuthProvider } from "./providers/AuthProvider";
+import { AuthProvider } from "../providers/AuthProvider";
+import { Toaster } from "@/components/ui/sonner"; 
 
 export const metadata: Metadata = {
   title: "Cita Dating App",
@@ -17,7 +18,10 @@ export default function RootLayout({
       <body
         className=""
       >
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          {children}
+          <Toaster position="top-center" richColors/>
+        </AuthProvider>
       </body>
     </html>
   );
