@@ -21,8 +21,10 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner"
+import { useRouter } from "next/navigation";
 
 const Onboarding = () => {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [sex, setSex] = useState("");
@@ -78,6 +80,10 @@ const Onboarding = () => {
       );
 
       toast.success("Profile updated successfully!");
+      setTimeout(() => {
+         router.push("/")
+      }, 1500)
+     
     } catch (e) {
       console.error("Error updating document:", e);
     }
