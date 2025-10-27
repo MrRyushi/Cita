@@ -12,6 +12,7 @@ import { setDoc, doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { CircleAlert, CircleCheck } from "lucide-react";
 
 const Signup = () => {
   const router = useRouter();
@@ -26,7 +27,7 @@ const Signup = () => {
   async function registerUser(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (password !== repeatPassword) {
-      setAlertTitle("Password Mismatch");
+      setAlertTitle("Passwords Mismatch");
       setAlertDescription("The passwords you entered do not match.");
       setAlertType("error");
       setShowAlert(true);
@@ -65,7 +66,6 @@ const Signup = () => {
           sex: "",
           into: "",
           bio: "",
-          interests: [],
           photoURL: "",
           likedUsers: [],
           passes: [],
@@ -121,6 +121,7 @@ const Signup = () => {
                   : "border-red-500 text-red-700 bg-red-50"
               }
             >
+              {alertType === "success" ? <CircleCheck /> : <CircleAlert />}
               <AlertTitle>{alertTitle}</AlertTitle>
               <AlertDescription>{alertDescription}</AlertDescription>
             </Alert>

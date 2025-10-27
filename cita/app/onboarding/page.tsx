@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { auth } from "../../firebase/firebase";
 import { setDoc, doc } from "firebase/firestore";
 import { db } from "../../firebase/firebase";
+import AuthGuard from "@/components/AuthGuard";
 
 const Onboarding = () => {
   const [name, setName] = useState("");
@@ -10,7 +11,6 @@ const Onboarding = () => {
   const [sex, setSex] = useState("");
   const [into, setInto] = useState("");
   const [bio, setBio] = useState("");
-  const [interests, setInterests] = useState("");
   const [photoURL, setPhotoURL] = useState("");
 
   async function onboard() {
@@ -26,7 +26,6 @@ const Onboarding = () => {
           sex,
           into,
           bio,
-          interests: interests.split(",").map((i) => i.trim()),
           photoURL,
         },
         { merge: true }
@@ -39,7 +38,7 @@ const Onboarding = () => {
   }
 
   return (
-    <div>
+    <AuthGuard>
       <form action={onboard}>
         <div>
           <label htmlFor="name">Name</label>
@@ -112,18 +111,6 @@ const Onboarding = () => {
             required
           />
         </div>
-        <div>
-          <label htmlFor="interests">Interests</label>
-          <input
-            type="text"
-            placeholder="Enter your interests, separated by commas"
-            id="interests"
-            name="interests"
-            value={interests}
-            onChange={(e) => setInterests(e.target.value)}
-            required
-          />
-        </div>
         {/*<div>
           <label htmlFor="photoURL">Profile Picture</label>
           <input 
@@ -140,7 +127,7 @@ const Onboarding = () => {
           <button onClick={onboard}>Complete Details</button>
         </div>
       </form>
-    </div>
+    </AuthGuard>
   );
 };
 
