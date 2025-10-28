@@ -62,7 +62,11 @@ const Login = () => {
       setAlertTitle("Login Failed");
       setAlertType("error");
       let message = "An unexpected error occurred";
-      const anyErr = err as any;
+      type FirebaseAuthError = {
+        code?: string;
+        message?: string;
+      };
+      const anyErr = err as FirebaseAuthError;
       const code =
         anyErr && typeof anyErr === "object" ? anyErr.code : undefined;
       if (typeof code === "string") {
@@ -92,9 +96,9 @@ const Login = () => {
 
   return (
     <GuestGuard>
-      <div className="w-screen h-screen flex flex-col justify-center items-center bg-linear-to-bl from-pink-900 via-red-400 to-[#FFABAB]">
+      <div className="w-screen h-screen flex flex-col justify-center items-center">
         <h1 className="text-3xl text-white mb-5">Welcome to Cita!</h1>
-        <div className="flex flex-col p-8 bg-white rounded-xl w-4/5 md:w-3/5 lg:w-2/5 xl:w-1/3 space-y-2">
+        <div className="flex flex-col p-8 bg-white rounded-xl w-4/5 md:w-3/5 lg:w-2/5 xl:w-1/3 space-y-2 ">
           <h1 className="font-medium text-2xl text-center">Login</h1>
           <form onSubmit={signIn} className="flex flex-col space-y-5">
             {showAlert && (

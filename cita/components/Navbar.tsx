@@ -15,7 +15,8 @@ const Navbar = () => {
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 768px)");
 
-    const handleChange = (e: MediaQueryListEvent) => setIsMediumOrSmaller(e.matches);
+    const handleChange = (e: MediaQueryListEvent) =>
+      setIsMediumOrSmaller(e.matches);
 
     // Initial check
     setIsMediumOrSmaller(mediaQuery.matches);
@@ -35,7 +36,7 @@ const Navbar = () => {
   }
 
   return (
-    <div className="flex justify-end lg:justify-center items-center p-4">
+    <div className="flex justify-end md:justify-center items-center p-4 shadow-2l drop-shadow-lg bg-white">
       {isMediumOrSmaller ? (
         // Small screen (hamburger)
         <div className="relative">
@@ -47,31 +48,50 @@ const Navbar = () => {
           </button>
           {toggle && (
             <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-10">
-              <button className="block w-full text-left px-4 py-2 hover:bg-gray-100">Home</button>
-              <button className="block w-full text-left px-4 py-2 hover:bg-gray-100">Matches</button>
-              <button className="block w-full text-left px-4 py-2 hover:bg-gray-100">Messages</button>
-              <button className="block w-full text-left px-4 py-2 hover:bg-gray-100">Profile</button>
+              <button className="w-full text-left px-4 py-2 hover:bg-gray-100 flex flex-row space-x-1" onClick={() => router.push('/')}>
+                <Home /> <span>Home</span>
+              </button>
+              <button className="w-full text-left px-4 py-2 hover:bg-gray-100 flex flex-row space-x-1" onClick={() => router.push('/matches')}>
+                <Heart /> <span>Matches</span>
+              </button>
+              <button className="w-full text-left px-4 py-2 hover:bg-gray-100 flex flex-row space-x-1" onClick={() => router.push('/messages')}>
+                <Send /> <span>Messages</span>
+              </button>
+              <button className="w-full text-left px-4 py-2 hover:bg-gray-100 flex flex-row space-x-1" onClick={() => router.push('/profile')}>
+                <UserPen />
+                <span>Profile</span>
+              </button>
               <button
                 onClick={handleLogout}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex flex-row space-x-1"
               >
-                Logout
+                <LogOut />
+                <span>Logout</span>
               </button>
             </div>
           )}
         </div>
       ) : (
         // Large screen (horizontal nav)
-        <div className="flex flex-row justify-between space-x-20 py-3">
-          <button className="hover:underline underline-offset-4 flex flex-row space-x-1"><Home/> <span>Home</span></button>
-          <button className="hover:underline underline-offset-4 flex flex-row space-x-1"><Heart/> <span>Matches</span></button>
-          <button className="hover:underline underline-offset-4 flex flex-row space-x-1"><Send/> <span>Messages</span></button>
-          <button className="hover:underline underline-offset-4 flex flex-row space-x-1"><UserPen/><span>Profile</span></button>
+        <div className="flex flex-row justify-between md:space-x-10 lg:space-x-20 py-3">
+          <button className="hover:underline underline-offset-4 flex flex-row space-x-1" onClick={() => router.push('/')}>
+            <Home /> <span>Home</span>
+          </button>
+          <button className="hover:underline underline-offset-4 flex flex-row space-x-1" onClick={() => router.push('/matches')}>
+            <Heart /> <span>Matches</span>
+          </button>
+          <button className="hover:underline underline-offset-4 flex flex-row space-x-1" onClick={() => router.push('/messages')}>
+            <Send /> <span>Messages</span>
+          </button>
+          <button className="hover:underline underline-offset-4 flex flex-row space-x-1" onClick={() => router.push('/profile')}>
+            <UserPen />
+            <span>Profile</span>
+          </button>
           <button
             onClick={handleLogout}
             className="hover:underline underline-offset-4 flex flex-row space-x-1"
           >
-            <LogOut/>
+            <LogOut />
             <span>Logout</span>
           </button>
         </div>

@@ -115,7 +115,7 @@ const Signup = () => {
 
   return (
     <GuestGuard>
-      <div className="w-screen h-screen flex flex-col justify-center items-center bg-linear-to-bl from-pink-900 via-red-400 to-[#FFABAB]">
+      <div className="w-screen h-screen flex flex-col justify-center items-center">
         <div className="flex flex-col p-8 bg-white rounded-xl w-4/5 md:w-3/5 lg:w-2/5 xl:w-1/3 space-y-2">
           <h1 className="font-medium text-2xl text-center">Signup</h1>
           <p className="text-center">Create your account</p>

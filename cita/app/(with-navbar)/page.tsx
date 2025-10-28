@@ -41,14 +41,6 @@ export default function Home() {
   const [swipedUsers, setSwipedUsers] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
-  function userLogout() {
-    try {
-      signOut(auth);
-    } catch (e) {
-      console.log(e);
-    }
-  }
-
   useEffect(() => {
     const fetchSwipedUsers = async () => {
       if (!user) return;
@@ -117,12 +109,18 @@ export default function Home() {
           likedUsers: arrayUnion(first.id),
         });
 
-        await addDoc(collection(db, "matches"), {
-          users: [user.uid, first.id],
-          createdAt: new Date(),
-        });
+        if(first.likedUsers.includes(user.uid)) {
+          // It's a match!
+          toast.success(`It's a match with ${first.name}!`);
 
+          // Create a match document
+          await addDoc(collection(db, "matches"), {
+            users: [user.uid, first.id],
+            createdAt: new Date(),
+          });
+        } else {
         toast.info(`Liked ${first.name}`);
+        }
       } catch (e) {
         console.error(e);
         toast.error("Failed to record like");
@@ -132,7 +130,7 @@ export default function Home() {
 
   return (
     <AuthGuard>
-      <div className="w-full h-screen pb-10 flex flex-col justify-center items-center bg-linear-to-bl from-pink-900 via-red-400 to-[#FFABAB]">
+      <div className="w-full h-screen pb-10 flex flex-col justify-center items-center">
         <div className="space-y-3 flex justify-center items-center flex-col">
           {loading ? (
             <p className="text-xl">Loading Profiles...</p>
@@ -145,7 +143,7 @@ export default function Home() {
               </p>
             </div>
           ) : (
-            <div className="md:grid grid-cols-2 bg-white rounded-xl min-w-4xl w-80/100 xs:w-80 sm:w-80 md:w-80/100 lg:w-70/100 2xl:w-55/100 justify-center items-center">
+            <div className="md:grid grid-cols-2 bg-white rounded-xl w-80/100 xs:w-80 sm:w-80 md:w-80/100 lg:w-70/100 2xl:w-55/100 justify-center items-center">
               <div className="">
                 {queue.length > 0 ? (
                   <img

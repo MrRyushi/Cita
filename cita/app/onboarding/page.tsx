@@ -92,7 +92,7 @@ const Onboarding = () => {
 
   return (
     <AuthGuard>
-      <div className="w-screen h-screen flex flex-col justify-center items-center bg-linear-to-bl from-pink-900 via-red-400 to-[#FFABAB] px-4">
+      <div className="w-screen h-screen flex flex-col justify-center items-center px-4">
         <form className="bg-white p-8 rounded-xl w-full xs:w-5/6 sm:w-2/3 md:w-1/2 lg:w-1/3 overflow-y-auto" action={onboard}>
         <FieldSet>
           <FieldTitle className="text-xl">Complete your profile</FieldTitle>
