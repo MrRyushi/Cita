@@ -17,16 +17,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="">
+      <body>
         <AuthProvider>
-          <SidebarProvider>
-            <AppSidebar />
-            <main>
-              <SidebarTrigger />
-              {children}
-              <Toaster position="top-center" richColors />
-            </main>
-          </SidebarProvider>
+          {children}
+          <Toaster position="top-center" richColors />
         </AuthProvider>
       </body>
     </html>
