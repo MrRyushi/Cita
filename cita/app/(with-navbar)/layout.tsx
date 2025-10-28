@@ -7,7 +7,7 @@ export default function WithNavbarLayout({
   children: React.ReactNode;
 }) {
   return (
- <div className="flex flex-col h-screen overflow-hidden">
+ <div className="flex flex-col md:h-screen overflow-hidden">
       <Navbar />
       <main className="flex-1 overflow-hidden">{children}</main>
     </div>

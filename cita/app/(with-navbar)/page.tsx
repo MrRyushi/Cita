@@ -109,12 +109,12 @@ export default function Home() {
 
   return (
     <AuthGuard>
-      <div className="w-full px-52 3xl:w-screen h-screen pb-10 flex flex-col justify-center items-center bg-linear-to-bl from-pink-900 via-red-400 to-[#FFABAB]">
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 bg-white rounded-xl">
+      <div className="w-full h-screen pb-10 flex flex-col justify-center items-center bg-linear-to-bl from-pink-900 via-red-400 to-[#FFABAB]">
+        <div className="space-y-3 flex justify-center items-center flex-col">
+          <div className="md:grid grid-cols-2 bg-white rounded-xl w-80/100 xs:w-80 sm:w-80 md:w-80/100 lg:w-70/100 2xl:w-55/100 justify-center items-center">
             <div className="">
               {queue.length > 0 ? (
-                <img src={queue[0].photoURL} alt={queue[0].name} width={500} height={500} className="ltr rounded-s-xl"/>
+                <img src={queue[0].photoURL} alt={queue[0].name} className="ltr rounded-t-xl md:rounded-s-xl w-full h-full"/>
               ) : (
                 <p>No users available</p>
               )}
@@ -137,8 +137,8 @@ export default function Home() {
           </div>
 
           <div className="flex flex-row justify-center items-center space-x-10">
-            <button onClick={handlePass} className="bg-[#FCC8D1] hover:bg-pink-200 w-20 h-20 rounded-full py-2 flex justify-center items-center"><X size={40}/></button>
-            <button onClick={handleLike} className="bg-red-900 hover:bg-red-800 w-20 h-20 rounded-full py-2 text-white flex justify-center items-center"><Check size={40}/></button>
+            <button onClick={handlePass} className="bg-[#FCC8D1] hover:bg-pink-200 w-15 h-15 md:w-20 md:h-20 rounded-full py-2 flex justify-center items-center"><X size={30}/></button>
+            <button onClick={handleLike} className="bg-red-900 hover:bg-red-800 w-15 h-15 md:w-20 md:h-20 rounded-full py-2 text-white flex justify-center items-center"><Check size={30}/></button>
           </div>
         </div>
       </div>  
