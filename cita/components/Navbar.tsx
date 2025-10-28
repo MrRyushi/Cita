@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { auth } from "../firebase/firebase";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import { Menu } from "lucide-react";
+import { Menu, Home, Heart, Send, UserPen, LogOut } from "lucide-react";
 
 const Navbar = () => {
   const router = useRouter();
@@ -28,7 +28,7 @@ const Navbar = () => {
   async function handleLogout() {
     try {
       await signOut(auth);
-      router.push("/"); // optional: redirect to login/home
+      router.push("/login");
     } catch (e) {
       console.log(e);
     }
@@ -63,15 +63,16 @@ const Navbar = () => {
       ) : (
         // Large screen (horizontal nav)
         <div className="flex flex-row justify-between space-x-20 py-3">
-          <button className="hover:underline underline-offset-4">Home</button>
-          <button className="hover:underline underline-offset-4">Matches</button>
-          <button className="hover:underline underline-offset-4">Messages</button>
-          <button className="hover:underline underline-offset-4">Profile</button>
+          <button className="hover:underline underline-offset-4 flex flex-row space-x-1"><Home/> <span>Home</span></button>
+          <button className="hover:underline underline-offset-4 flex flex-row space-x-1"><Heart/> <span>Matches</span></button>
+          <button className="hover:underline underline-offset-4 flex flex-row space-x-1"><Send/> <span>Messages</span></button>
+          <button className="hover:underline underline-offset-4 flex flex-row space-x-1"><UserPen/><span>Profile</span></button>
           <button
             onClick={handleLogout}
-            className="hover:underline underline-offset-4"
+            className="hover:underline underline-offset-4 flex flex-row space-x-1"
           >
-            Logout
+            <LogOut/>
+            <span>Logout</span>
           </button>
         </div>
       )}
