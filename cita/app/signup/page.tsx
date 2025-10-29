@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   createUserWithEmailAndPassword,
   fetchSignInMethodsForEmail,
-  sendEmailVerification,
 } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
 import { auth, db } from "../../firebase/firebase";
@@ -62,7 +61,7 @@ const Signup = () => {
 
       // create user in firestore
       try {
-        const docRef = await setDoc(doc(db, "users", userCredential.user.uid), {
+        await setDoc(doc(db, "users", userCredential.user.uid), {
           name: "",
           age: null,
           sex: "",
@@ -162,9 +161,9 @@ const Signup = () => {
             </div>
 
             <div className="flex flex-col space-y-2">
-              <label htmlFor="repeat_password">Repeat Password</label>
+              <label htmlFor="repeat_password">Confirm Password</label>
               <input
-                placeholder="Repeat your password"
+                placeholder="Confirm password"
                 type="password"
                 id="repeat_password"
                 name="repeat_password"

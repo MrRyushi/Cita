@@ -1,8 +1,7 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 import AuthGuard from "@/components/AuthGuard";
 import { auth, db } from "../../firebase/firebase";
-import { signOut } from "firebase/auth";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   collection,
@@ -16,8 +15,6 @@ import {
   addDoc,
 } from "firebase/firestore";
 import { toast } from "sonner";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Venus, Mars, X, Check } from "lucide-react";
 
@@ -36,7 +33,6 @@ type UserProfile = {
 
 export default function Home() {
   const user = auth.currentUser;
-  const router = useRouter();
   const [queue, setQueue] = useState<UserProfile[]>([]);
   const [swipedUsers, setSwipedUsers] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,10 +70,6 @@ export default function Home() {
     fetchUsers();
   }, [user?.uid, swipedUsers]);
 
-  function shuffleArray<T>(array: T[]): T[] {
-    return array.sort(() => Math.random() - 0.5);
-  }
-
   async function handlePass() {
     if (!user?.uid) return;
 
@@ -109,7 +101,7 @@ export default function Home() {
           likedUsers: arrayUnion(first.id),
         });
 
-        if(first.likedUsers.includes(user.uid)) {
+        if (first.likedUsers.includes(user.uid)) {
           // It's a match!
           toast.success(`It's a match with ${first.name}!`);
 
@@ -119,7 +111,7 @@ export default function Home() {
             createdAt: new Date(),
           });
         } else {
-        toast.info(`Liked ${first.name}`);
+          toast.info(`Liked ${first.name}`);
         }
       } catch (e) {
         console.error(e);
@@ -136,7 +128,9 @@ export default function Home() {
             <p className="text-xl">Loading Profiles...</p>
           ) : queue.length === 0 ? (
             <div className="bg-white rounded-xl mx-10 sm:mx-0 p-10 flex flex-col justify-center items-center">
-              <p className="text-xl sm:text-2xl font-bold mb-4 text-center">No more users available</p>
+              <p className="text-xl sm:text-2xl font-bold mb-4 text-center">
+                No more users available
+              </p>
               <p className="text-base text-center">
                 Check back later or adjust your preferences to find more
                 matches!
@@ -172,20 +166,22 @@ export default function Home() {
             </div>
           )}
 
-          <div className="flex flex-row justify-center items-center space-x-10">
-            <button
-              onClick={handlePass}
-              className="bg-[#FCC8D1] hover:bg-pink-200 w-15 h-15 md:w-20 md:h-20 rounded-full py-2 flex justify-center items-center"
-            >
-              <X size={30} />
-            </button>
-            <button
-              onClick={handleLike}
-              className="bg-red-900 hover:bg-red-800 w-15 h-15 md:w-20 md:h-20 rounded-full py-2 text-white flex justify-center items-center"
-            >
-              <Check size={30} />
-            </button>
-          </div>
+          {queue.length > 0 ? (
+            <div className="flex flex-row justify-center items-center space-x-10">
+              <button
+                onClick={handlePass}
+                className="bg-[#FCC8D1] hover:bg-pink-200 w-15 h-15 md:w-20 md:h-20 rounded-full py-2 flex justify-center items-center"
+              >
+                <X size={30} />
+              </button>
+              <button
+                onClick={handleLike}
+                className="bg-red-900 hover:bg-red-800 w-15 h-15 md:w-20 md:h-20 rounded-full py-2 text-white flex justify-center items-center"
+              >
+                <Check size={30} />
+              </button>
+            </div>
+          ) : null}
         </div>
       </div>
     </AuthGuard>

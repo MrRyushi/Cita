@@ -1,8 +1,16 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
-import React, { use, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { auth, db } from "../../../firebase/firebase";
-import { getDoc, doc } from "firebase/firestore";
+import { getDoc, doc, setDoc } from "firebase/firestore";
 import AuthGuard from "@/components/AuthGuard";
+import { Pencil } from "lucide-react";
+import { uploadToImgbb } from "@/utils/uploadToImgbb";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 type UserProfile = {
   name: string;
@@ -21,6 +29,12 @@ const Profile = () => {
   const user = auth.currentUser;
   const [userData, setUserData] = useState<UserProfile>();
   const [editing, setEditing] = useState(false);
+  const [photoURL, setPhotoURL] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [photoFilename, setPhotoFilename] = useState("No image");
+  const [name, setName] = useState("");
+  const [bio, setBio] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     // Fetch user data from Firestore or any other source
@@ -38,12 +52,75 @@ const Profile = () => {
       };
       fetchUserData();
     }
-  }, [user]);
+  }, [user, refreshKey]);
+
+  async function handleImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    const user = auth.currentUser;
+    if (!file || !user) return;
+
+    setLoading(true);
+
+    // Upload to imgbb
+    const imageUrl = await uploadToImgbb(file);
+
+    if (imageUrl) {
+      // Save image URL to Firestore
+      setPhotoURL(imageUrl);
+      const fileName = imageUrl.split("/").pop();
+      setPhotoFilename(fileName || "");
+    }
+
+    setLoading(false);
+  }
+
+  async function saveProfileChanges() {
+    // Implement save logic here
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error("No authenticated user");
+
+      if (!name || !bio || !photoURL) {
+        toast.error("Please fill in all fields");
+        return;
+      }
+
+      await setDoc(
+        doc(db, "users", user.uid),
+        {
+          name,
+          bio,
+          photoURL,
+        },
+        { merge: true }
+      );
+      setEditing(false);
+      clearValues();
+      toast.success("Profile updated successfully!");
+
+      setRefreshKey((prev) => prev + 1);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        toast.error(e.message);
+      } else {
+        toast.error("An unknown error occurred");
+      }
+    }
+  }
+
+  function clearValues() {
+    setName("");
+    setBio("");
+    setPhotoURL("");
+    setPhotoFilename("No image");
+  }
 
   return (
     <AuthGuard>
-      <div className="flex justify-center items-center h-screen pb-20">
+      <div className="flex justify-center items-center h-screen pb-20 px-2">
         <div className="p-10 rounded-lg bg-white shadow-lg">
+          {!editing && <Pencil className="" onClick={() => setEditing(true)} />}
+
           {userData && !editing ? (
             <div className="sm:p-6">
               <div className="flex flex-col items-center">
@@ -68,7 +145,63 @@ const Profile = () => {
             </div>
           ) : userData && editing ? (
             <div>
-              <h2>Edit Profile (Coming Soon)</h2>
+              <form
+                className="space-y-4"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  saveProfileChanges();
+                }}
+              >
+                <Field>
+                  <FieldLabel htmlFor="name">Name</FieldLabel>
+                  <Input
+                    type="text"
+                    placeholder="What is your name?"
+                    id="name"
+                    name="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="bio">Bio</FieldLabel>
+                  <Textarea
+                    placeholder="Tell us about yourself"
+                    id="bio"
+                    name="bio"
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    required
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel className="cursor-pointer">
+                    Upload Profile Picture
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      required
+                    />
+                    <div className="rounded-lg border px-4 py-2">
+                      {loading ? "Uploading..." : photoFilename}
+                    </div>
+                  </FieldLabel>
+                </Field>
+                <div className="flex justify-end gap-4">
+                  <Button
+                    className="bg-red-400 hover:bg-red-500 text-white rounded-lg pt-2"
+                    onClick={() => setEditing(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button className="bg-pink-700 hover:bg-pink-800 text-white rounded-lg pt-2" type="submit">
+                    Save
+                  </Button>
+                </div>
+              </form>
             </div>
           ) : (
             <p>Loading profile...</p>

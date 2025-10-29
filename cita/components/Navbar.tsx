@@ -7,7 +7,6 @@ import { Menu, Home, Heart, Send, UserPen, LogOut } from "lucide-react";
 
 const Navbar = () => {
   const router = useRouter();
-  const user = auth.currentUser;
 
   const [isMediumOrSmaller, setIsMediumOrSmaller] = useState(false);
   const [toggle, setToggle] = useState(false);
@@ -19,6 +18,7 @@ const Navbar = () => {
       setIsMediumOrSmaller(e.matches);
 
     // Initial check
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMediumOrSmaller(mediaQuery.matches);
 
     // Listen for screen size changes
