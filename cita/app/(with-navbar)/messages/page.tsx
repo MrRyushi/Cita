@@ -2,7 +2,7 @@
 import { auth, db } from "@/firebase/firebase";
 import { match } from "assert";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, getDocs, query, Timestamp, where } from "firebase/firestore";
+import { addDoc, collection, getDocs, query, Timestamp, where } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 
 type UserProfile = {
@@ -108,7 +108,6 @@ const Messages = () => {
           createdAt: doc.data().createdAt,
         });
       });
-      alert(messagesData[0].text);
       messagesData.sort((a, b) => a.createdAt.toMillis() - b.createdAt.toMillis());
       setMessages(messagesData);
     };
@@ -118,6 +117,23 @@ const Messages = () => {
 
   function handleSendMessage(matchId: string, text: string) {
     if (!user) return;
+
+    const sendMessage = async () => {
+      const messageData = {
+        senderId: user.uid,
+        text: text,
+        createdAt: Timestamp.now(),
+      };
+
+      try {
+        await addDoc(collection(db, "chats", matchId, "messages"), messageData);
+      } catch (e) {
+        console.error("Error sending message: ", e);
+      }
+      // Refresh messages
+      fetchMessages(matchId);
+    };
+    sendMessage();
   }
 
   if (loading)
@@ -153,7 +169,7 @@ const Messages = () => {
       <div className="col-span-3">
         {chatOpened ? (
           <div className="flex flex-col h-screen">
-            <div className="flex-grow p-4 overflow-y-auto">
+            <div className="p-4 overflow-y-auto">
               {messages && messages.length > 0 ? (
                 messages.map((message, index) => (
                   <div
@@ -181,7 +197,7 @@ const Messages = () => {
                 </p>
               )}
             </div>
-            <div className="p-4 border-t border-gray-300">
+            <div className="p-4 border-t grow-[70vw] border-gray-300">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
