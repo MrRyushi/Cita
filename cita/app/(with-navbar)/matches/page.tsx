@@ -108,9 +108,9 @@ const Matches = () => {
         prevMatches.filter((match) => match.matchId !== matchId)
       );
 
-      // remove matched user from likedUsers array in user's document
+      // remove matched user from likedUsers array in user's document (to do)
 
-      // remove document from messages collection between the two users
+      // remove document from messages collection between the two users (to do)
 
       toast.info("Unmatched with " + name);
     };
@@ -120,7 +120,7 @@ const Matches = () => {
 
   if (loading)
     return (
-      <div className="flex flex-col justify-center items-center h-screen mb-20">
+      <div className="flex flex-col justify-center items-center h-screen pb-20">
         <p className="text-white text-center text-xl">Loading matches...</p>
       </div>
     );
