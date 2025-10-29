@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Venus, Mars, X, Check } from "lucide-react";
+import { onAuthStateChanged, User } from "firebase/auth";
 
 type UserProfile = {
   name: string;
@@ -32,10 +33,24 @@ type UserProfile = {
 };
 
 export default function Home() {
-  const user = auth.currentUser;
+  const [user, setUser] = useState<User | null>(null);
   const [queue, setQueue] = useState<UserProfile[]>([]);
   const [swipedUsers, setSwipedUsers] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+      } else {
+        setUser(null);
+        setQueue([]);
+        setSwipedUsers([]);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const fetchSwipedUsers = async () => {
@@ -125,7 +140,7 @@ export default function Home() {
       <div className="w-full h-screen pb-10 flex flex-col justify-center items-center">
         <div className="space-y-3 flex justify-center items-center flex-col">
           {loading ? (
-            <p className="text-xl">Loading Profiles...</p>
+            <p className="text-xl text-white">Loading Profiles...</p>
           ) : queue.length === 0 ? (
             <div className="bg-white rounded-xl mx-10 sm:mx-0 p-10 flex flex-col justify-center items-center">
               <p className="text-xl sm:text-2xl font-bold mb-4 text-center">
