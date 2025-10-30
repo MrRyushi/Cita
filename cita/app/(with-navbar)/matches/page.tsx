@@ -109,9 +109,8 @@ const Matches = () => {
         prevMatches.filter((match) => match.matchId !== matchId)
       );
 
-      // remove matched user from likedUsers array in user's document (to do)
-
-      // remove document from messages collection between the two users (to do)
+      // remove document from messages collection between the two users
+      await deleteDoc(doc(db, "chats", matchId));
 
       toast.info("Unmatched with " + name);
     };
