@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { onAuthStateChanged } from "firebase/auth";
 
 type UserProfile = {
   name: string;
@@ -38,21 +39,20 @@ const Profile = () => {
 
   useEffect(() => {
     // Fetch user data from Firestore or any other source
-    if (user) {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
       const docRef = doc(db, "users", user.uid);
-      const fetchUserData = async () => {
-        const docSnap = await getDoc(docRef);
+      const docSnap = await getDoc(docRef);
 
-        if (docSnap.exists()) {
-          setUserData(docSnap.data() as UserProfile);
-        } else {
-          // docSnap.data() will be undefined in this case
-          console.log("No such document!");
-        }
-      };
-      fetchUserData();
-    }
-  }, [user, refreshKey]);
+      if (docSnap.exists()) {
+        setUserData(docSnap.data() as UserProfile);
+      } else {
+        // docSnap.data() will be undefined in this case
+        console.log("No such document!");
+      }
+    });
+    return () => unsubscribeAuth();
+  });
 
   async function handleImageUpload(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -80,17 +80,16 @@ const Profile = () => {
       const user = auth.currentUser;
       if (!user) throw new Error("No authenticated user");
 
-      if (!name || !bio || !photoURL) {
-        toast.error("Please fill in all fields");
-        return;
-      }
+      const updatedName = name || userData?.name || "";
+      const updatedBio = bio || userData?.bio || "";
+      const updatedPhotoURL = photoURL || userData?.photoURL || "";
 
       await setDoc(
         doc(db, "users", user.uid),
         {
-          name,
-          bio,
-          photoURL,
+          name: updatedName,
+          bio: updatedBio,
+          photoURL: updatedPhotoURL,
         },
         { merge: true }
       );
@@ -159,9 +158,8 @@ const Profile = () => {
                     placeholder="What is your name?"
                     id="name"
                     name="name"
-                    value={name}
+                    value={userData.name || name}
                     onChange={(e) => setName(e.target.value)}
-                    required
                   />
                 </Field>
                 <Field>
@@ -170,9 +168,8 @@ const Profile = () => {
                     placeholder="Tell us about yourself"
                     id="bio"
                     name="bio"
-                    value={bio}
+                    value={userData.bio || bio}
                     onChange={(e) => setBio(e.target.value)}
-                    required
                   />
                 </Field>
                 <Field>
@@ -183,7 +180,6 @@ const Profile = () => {
                       accept="image/*"
                       onChange={handleImageUpload}
                       className="hidden"
-                      required
                     />
                     <div className="rounded-lg border px-4 py-2">
                       {loading ? "Uploading..." : photoFilename}
@@ -197,7 +193,10 @@ const Profile = () => {
                   >
                     Cancel
                   </Button>
-                  <Button className="bg-pink-700 hover:bg-pink-800 text-white rounded-lg pt-2" type="submit">
+                  <Button
+                    className="bg-pink-700 hover:bg-pink-800 text-white rounded-lg pt-2"
+                    type="submit"
+                  >
                     Save
                   </Button>
                 </div>

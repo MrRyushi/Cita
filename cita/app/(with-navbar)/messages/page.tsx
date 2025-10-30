@@ -269,7 +269,7 @@ const Messages = () => {
         <div className="col-span-6 lg:col-span-7 h-screen flex flex-col">
           {/* Chat Header */}
           {chatOpened && (
-            <div className="flex flex-row border bg-white shadow-2xl px-4 py-2 items-center">
+            <div className="flex flex-row bg-white shadow-2xl px-4 py-2 items-center">
               {isMobileView && (
                 <button
                   className="w-12"
