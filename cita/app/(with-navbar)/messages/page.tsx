@@ -2,7 +2,19 @@
 import { auth, db } from "@/firebase/firebase";
 import { match } from "assert";
 import { onAuthStateChanged } from "firebase/auth";
-import { addDoc, collection, getDocs, query, Timestamp, where } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  getDocs,
+  query,
+  setDoc,
+  Timestamp,
+  doc,
+  where,
+  updateDoc,
+  onSnapshot,
+} from "firebase/firestore";
+import { ArrowLeft, Send } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 type UserProfile = {
@@ -17,6 +29,8 @@ type UserProfile = {
   newUser: boolean;
   id: string;
   matchId: string;
+  lastSent: Timestamp;
+  lastMessage: string;
 };
 
 type Message = {
@@ -28,14 +42,17 @@ type Message = {
 const Messages = () => {
   const user = auth.currentUser;
   const [matches, setMatches] = useState<UserProfile[]>([]);
-  const [matchesIds, setMatchesIds] = useState<
-    { userId: string; matchId: string }[]
-  >([]);
   const [loading, setLoading] = useState(true);
   const [chatOpened, setChatOpened] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
+  const [messageInput, setMessageInput] = useState("");
+  const [isChatOpened, setIsChatOpened] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
+  const messagesContainerRef = React.useRef<HTMLDivElement | null>(null);
+  const messagesEndRef = React.useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    // Make sure user is authenticated
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (!user) {
         setLoading(false);
@@ -43,85 +60,146 @@ const Messages = () => {
         return;
       }
 
+      // Fetch all matches for the authenticated user
       const q = query(
         collection(db, "matches"),
         where("users", "array-contains", user.uid)
       );
 
-      const querySnapshot = await getDocs(q);
-      const matchIds: { userId: string; matchId: string }[] = [];
-      querySnapshot.forEach((doc) => {
-        const otherUserId = doc
-          .data()
-          .users.find((uid: string) => uid !== user.uid);
-        if (otherUserId) {
-          matchIds.push({
-            userId: otherUserId, // the matched user’s UID
-            matchId: doc.id, // the match document ID
+      const unsubscribeMatches = onSnapshot(q, async (querySnapshot) => {
+        const matchIds: {
+          userId: string;
+          matchId: string;
+          lastSent: Timestamp;
+          lastMessage: string;
+        }[] = [];
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const otherUserId = data.users.find(
+            (uid: string) => uid !== user.uid
+          );
+          if (otherUserId) {
+            matchIds.push({
+              userId: otherUserId,
+              matchId: doc.id,
+              lastSent: data.lastSent || null,
+              lastMessage: data.lastMessage || "",
+            });
+          }
+        });
+
+        // Batch fetch matched users' profiles
+        const usersData: UserProfile[] = [];
+        for (let i = 0; i < matchIds.length; i += 10) {
+          const batch = matchIds.slice(i, i + 10);
+          const batchUserIds = batch.map((b) => b.userId);
+
+          const usersQuery = query(
+            collection(db, "users"),
+            where("__name__", "in", batchUserIds)
+          );
+
+          const usersSnapshot = await getDocs(usersQuery);
+
+          usersSnapshot.forEach((doc) => {
+            const matchObj = matchIds.find((m) => m.userId === doc.id);
+            usersData.push({
+              id: doc.id,
+              matchId: matchObj?.matchId,
+              lastSent: matchObj?.lastSent,
+              lastMessage: matchObj?.lastMessage,
+              ...doc.data(),
+            } as UserProfile);
           });
         }
-      });
 
-      setMatchesIds(matchIds);
-
-      const usersData: UserProfile[] = [];
-      for (let i = 0; i < matchIds.length; i += 10) {
-        const batch = matchIds.slice(i, i + 10);
-        const batchUserIds = batch.map((b) => b.userId);
-
-        const usersQuery = query(
-          collection(db, "users"),
-          where("__name__", "in", batchUserIds)
-        );
-        const usersSnapshot = await getDocs(usersQuery);
-
-        usersSnapshot.forEach((doc) => {
-          const matchObj = matchIds.find((m) => m.userId === doc.id);
-          usersData.push({
-            id: doc.id,
-            matchId: matchObj?.matchId,
-            ...doc.data(),
-          } as UserProfile);
+        // Sort matches by latest message (descending)
+        const sorted = [...usersData].sort((a, b) => {
+          const aTime = a.lastSent?.toMillis?.() ?? 0;
+          const bTime = b.lastSent?.toMillis?.() ?? 0;
+          return bTime - aTime;
         });
-      }
 
-      setMatches(usersData);
-      setLoading(false);
+        setMatches(sorted);
+        setLoading(false);
+      });
+      return () => unsubscribeMatches();
     });
 
     return () => unsubscribeAuth();
   }, []);
 
+  useEffect(() => {
+    if (messagesContainerRef.current) {
+      const container = messagesContainerRef.current;
+      container.scrollTop = container.scrollHeight - 50; // try 50px offset
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    // Match screens 425px wide or less
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+
+    // Handler when screen size changes
+    const handleChange = (e: MediaQueryListEvent | MediaQueryList) => {
+      setIsMobileView(e.matches);
+    };
+
+    // Initial check
+    setIsMobileView(mediaQuery.matches);
+
+    // Add listener (using correct API depending on browser support)
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", handleChange);
+    } else {
+      // For older Safari versions
+      mediaQuery.addListener(handleChange);
+    }
+
+    // Cleanup listener
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener("change", handleChange);
+      } else {
+        mediaQuery.removeListener(handleChange);
+      }
+    };
+  }, []);
+
   function fetchMessages(matchId: string) {
     if (!user) return;
-    
+
+    // Fetch messages for the selected match
     const getMessages = async () => {
       const q = query(collection(db, "chats", matchId, "messages"));
 
       const querySnapshot = await getDocs(q);
       const messagesData: Message[] = [];
       querySnapshot.forEach((doc) => {
-        if(!doc.exists()) return;
+        if (!doc.exists()) return;
         messagesData.push({
           senderId: doc.data().senderId,
           text: doc.data().text,
           createdAt: doc.data().createdAt,
         });
       });
-      messagesData.sort((a, b) => a.createdAt.toMillis() - b.createdAt.toMillis());
+      messagesData.sort(
+        (a, b) => a.createdAt.toMillis() - b.createdAt.toMillis()
+      );
       setMessages(messagesData);
     };
     getMessages();
     setChatOpened(matchId);
   }
 
-  function handleSendMessage(matchId: string, text: string) {
+  function handleSendMessage(matchId: string) {
     if (!user) return;
 
     const sendMessage = async () => {
       const messageData = {
         senderId: user.uid,
-        text: text,
+        text: messageInput,
         createdAt: Timestamp.now(),
       };
 
@@ -130,12 +208,21 @@ const Messages = () => {
       } catch (e) {
         console.error("Error sending message: ", e);
       }
+
+      // Update the match with last message info
+      const matchRef = doc(db, "matches", matchId);
+      await updateDoc(matchRef, {
+        lastMessage: messageInput,
+        lastSent: Timestamp.now(),
+      });
       // Refresh messages
+      setMessageInput("");
       fetchMessages(matchId);
     };
     sendMessage();
   }
 
+  // Display loading state
   if (loading)
     return (
       <div className="flex flex-col justify-center items-center h-screen pb-20">
@@ -144,92 +231,137 @@ const Messages = () => {
     );
 
   return (
-    <div className="grid grid-cols-4">
-      <div className="col-span-1 bg-white hover:bg-slate-100">
-        {matches.map((match) => (
-          <div
-            key={match.id}
-            onClick={(e) => {
-              e.preventDefault();
-              fetchMessages(match.matchId);
-            }}
-            className="p-2 flex flex-row space-x-4 items-center"
-          >
-            <img src={match.photoURL} className="w-10 h-10 rounded-full" />
-            <div>
-              <p className="text-black text-xl font-medium">{match.name}</p>
-              <p className="text-black">
-                This is the latest message!{/*latest message*/}
-              </p>
+    <div className={`md:grid md:grid-cols-10`}>
+      {/* Matches List */}
+      {/* If mobile view, only show matches list when chat is not opened */}
+      {(!isMobileView || !isChatOpened) && (
+        <div className={`md:col-span-4 lg:col-span-3 bg-white p-2`}>
+          <h1 className="text-black text-2xl font-bold">Chats</h1>
+          {matches.map((match) => (
+            <div
+              key={match.id}
+              onClick={(e) => {
+                e.preventDefault();
+                fetchMessages(match.matchId);
+                setIsChatOpened(true);
+              }}
+              className={`p-2 flex flex-row space-x-4 items-center hover:bg-slate-100 ${
+                chatOpened === match.matchId ? "bg-slate-100" : ""
+              }`}
+            >
+              <img
+                src={match.photoURL}
+                className="w-10 h-10 rounded-full"
+                alt="User Photo"
+              />
+              <div>
+                <p className="text-black text-xl font-medium">{match.name}</p>
+                <p className="text-black">{match.lastMessage}</p>
+              </div>
+              <hr className="my-2 border-gray-300" />
             </div>
-            <hr className="my-2 border-gray-300" />
-          </div>
-        ))}
-      </div>
-      <div className="col-span-3">
-        {chatOpened ? (
-          <div className="flex flex-col h-screen">
-            <div className="p-4 overflow-y-auto">
-              {messages && messages.length > 0 ? (
-                messages.map((message, index) => (
-                  <div
-                    key={index}
-                    className={`mb-2 flex ${
-                      message.senderId === user?.uid
-                        ? "justify-end"
-                        : "justify-start"
-                    }`}
-                  >
+          ))}
+        </div>
+      )}
+      {/* Chat Window */}
+      {/* If mobile view, only show chat window when a chat is opened */}
+      {(!isMobileView || isChatOpened) && (
+        <div className="col-span-6 lg:col-span-7 h-screen flex flex-col">
+          {/* Chat Header */}
+          {chatOpened && (
+            <div className="flex flex-row border bg-white shadow-2xl px-4 py-2 items-center">
+              {isMobileView && (
+                <button
+                  className="w-12"
+                  onClick={() => {
+                    setIsChatOpened(false);
+                  }}
+                >
+                  <ArrowLeft />
+                </button>
+              )}
+              <img
+                src={
+                  matches.find((match) => match.matchId === chatOpened)
+                    ?.photoURL
+                }
+                className="w-10 h-10 rounded-full me-3"
+                alt="User Photo"
+              />
+              <h2 className="text-black text-2xl font-bold">
+                {matches.find((match) => match.matchId === chatOpened)?.name}
+              </h2>
+            </div>
+          )}
+          {chatOpened ? (
+            <>
+              {/* Messages List */}
+              <div
+                className="flex-1 overflow-y-auto p-4 md:pb-22"
+                ref={messagesContainerRef}
+              >
+                {messages && messages.length > 0 ? (
+                  messages.map((message, index) => (
                     <div
-                      className={`p-2 rounded-lg max-w-xs ${
+                      key={index}
+                      className={`mb-2 flex ${
                         message.senderId === user?.uid
-                          ? "bg-blue-500 text-white"
-                          : "bg-gray-200 text-black"
+                          ? "justify-end"
+                          : "justify-start"
                       }`}
                     >
-                      {message.text}
+                      <div
+                        className={`p-2 rounded-lg max-w-xs ${
+                          message.senderId === user?.uid
+                            ? "bg-blue-500 text-white"
+                            : "bg-gray-200 text-black"
+                        }`}
+                      >
+                        {message.text}
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="h-screen flex flex-col justify-center items-center pb-40">
+                    <p className="text-white text-xl">
+                      No messages yet. Say hi!
+                    </p>
                   </div>
-                ))
-              ) : (
-                <p className="text-gray-500 text-xl">
-                  No messages yet. Say hi!
-                </p>
-              )}
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Message Input */}
+              <div className="p-4 block border-t border-gray-300 sticky bottom-0 bg-white">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSendMessage(chatOpened);
+                  }}
+                  className="flex space-x-2"
+                >
+                  <input
+                    type="text"
+                    name="message"
+                    className="w-full p-2 border border-gray-300 rounded-lg"
+                    placeholder="Type your message..."
+                    value={messageInput}
+                    onChange={(e) => setMessageInput(e.target.value)}
+                    required
+                  />
+                  <button type="submit">
+                    <Send />
+                  </button>
+                </form>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-full text-white text-xl pb-20">
+              Select a chat to start messaging.
             </div>
-            <div className="p-4 border-t grow-[70vw] border-gray-300">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const form = e.target as HTMLFormElement;
-                  const input = form.elements.namedItem(
-                    "message"
-                  ) as HTMLInputElement;
-                  handleSendMessage(
-                    matches.find((m) => m.id === chatOpened)?.matchId || "",
-                    input.value
-                  );
-                  input.value = "";
-                }}
-              >
-                <input
-                  type="text"
-                  name="message"
-                  className="w-full p-2 border border-gray-300 rounded-lg"
-                  placeholder="Type your message..."
-                  required
-                />
-              </form>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col justify-center items-center h-screen">
-            <p className="text-white text-xl">
-              Select a chat to start messaging
-            </p>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
