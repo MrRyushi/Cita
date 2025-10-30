@@ -4,7 +4,7 @@ import { auth, db } from "../../../firebase/firebase";
 import { getDoc, doc, setDoc } from "firebase/firestore";
 import AuthGuard from "@/components/AuthGuard";
 import { Pencil } from "lucide-react";
-import { uploadToImgbb } from "@/utils/uploadToImgbb";
+import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -59,7 +59,7 @@ const Profile = () => {
     setLoading(true);
 
     // Upload to imgbb
-    const imageUrl = await uploadToImgbb(file);
+    const imageUrl = await uploadToCloudinary(file);
 
     if (imageUrl) {
       // Save image URL to Firestore
@@ -126,7 +126,7 @@ const Profile = () => {
                 <img
                   src={userData.photoURL}
                   alt="Profile Picture"
-                  className="w-32 h-32 rounded-full mb-4"
+                  className="w-32 h-32 rounded-full mb-4 object-cover"
                 />
                 <h2 className="text-2xl font-bold mb-2">
                   {userData.name}, {userData.age}

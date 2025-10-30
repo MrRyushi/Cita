@@ -48,7 +48,7 @@ const Navbar = () => {
             <Menu />
           </button>
           {toggle && (
-            <div className="absolute right-0 mt-2 w-48 bg-white border rounded-md shadow-lg z-10">
+            <div className="absolute right-0 mt-2 w-48 bg-white text-black border rounded-md shadow-lg z-10">
               <button className="w-full text-left px-4 py-2 hover:bg-gray-100 flex flex-row space-x-1" onClick={() => router.push('/')}>
                 <Home /> <span>Home</span>
               </button>
