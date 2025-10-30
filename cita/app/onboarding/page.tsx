@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Textarea } from "@/components/ui/textarea";
+import { ModeToggle } from "@/components/ModeToggle";
 
 const Onboarding = () => {
   const router = useRouter();
@@ -80,7 +81,6 @@ const Onboarding = () => {
       setTimeout(() => {
         router.push("/");
       }, 1500);
-
     } catch (e) {
       console.error("Error updating document:", e);
     }
@@ -89,8 +89,11 @@ const Onboarding = () => {
   return (
     <AuthGuard>
       <div className="w-screen h-screen flex flex-col justify-center items-center px-4">
+        <div className="absolute top-3 left-3">
+          <ModeToggle />
+        </div>
         <form
-          className="bg-white p-8 rounded-xl w-full xs:w-5/6 sm:w-2/3 md:w-1/2 lg:w-1/3 overflow-y-auto"
+          className="p-8 rounded-xl w-full xs:w-5/6 sm:w-2/3 md:w-1/2 lg:w-1/3 overflow-y-auto"
           onSubmit={(e) => {
             e.preventDefault();
             onboard();
@@ -128,7 +131,7 @@ const Onboarding = () => {
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Sex" />
                 </SelectTrigger>
-                <SelectContent className="bg-white">
+                <SelectContent className="">
                   <SelectItem value="man">Man</SelectItem>
                   <SelectItem value="woman">Woman</SelectItem>
                   <SelectItem value="prefer_not_to_say">
