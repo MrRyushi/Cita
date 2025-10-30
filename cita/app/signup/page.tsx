@@ -27,6 +27,7 @@ const Signup = () => {
   async function registerUser(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (password !== repeatPassword) {
+      // Set Error Alert
       setAlertTitle("Passwords Mismatch");
       setAlertDescription("The passwords you entered do not match.");
       setAlertType("error");
@@ -37,6 +38,7 @@ const Signup = () => {
     try {
       const methods = await fetchSignInMethodsForEmail(auth, email);
       if (methods.length > 0) {
+        // Set Error Alert
         setAlertTitle("Email Already Registered");
         setAlertDescription(
           "This email is already registered. Please log in instead."
@@ -53,13 +55,13 @@ const Signup = () => {
       );
       await auth.signOut();
 
-      //alert("Account created:" + userCredential.user.uid);
+      // Set Error Alert
       setAlertTitle("Account Created");
       setAlertDescription("Your account has been successfully created.");
       setShowAlert(true);
       setAlertType("success");
 
-      // create user in firestore
+      // Create user in firestore
       try {
         await setDoc(doc(db, "users", userCredential.user.uid), {
           name: "",
@@ -82,6 +84,8 @@ const Signup = () => {
       }, 3000)
       
     } catch (error: unknown) {
+
+      // Set Error Alert
       console.error("Registration error:", error);
       setAlertType("error");
       if (error instanceof FirebaseError) {

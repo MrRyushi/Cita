@@ -13,6 +13,7 @@ import {
   updateDoc,
   arrayUnion,
   addDoc,
+  onSnapshot,
 } from "firebase/firestore";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +39,7 @@ export default function Home() {
   const [swipedUsers, setSwipedUsers] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Retrieves the current user
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
@@ -52,37 +54,39 @@ export default function Home() {
     return () => unsubscribe();
   }, []);
 
+  // Fetches all swiped users to filter later
   useEffect(() => {
-    const fetchSwipedUsers = async () => {
-      if (!user) return;
+    if (!user) return;
 
-      const userRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists()) {
-        const data = userSnap.data() as UserProfile;
+    const userRef = doc(db, "users", user.uid);
+    const unsubscribe = onSnapshot(userRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data() as UserProfile;
         setSwipedUsers([...data.likedUsers, ...data.passes]);
       }
-    };
-    fetchSwipedUsers();
+    });
+
+    return () => unsubscribe();
   }, [user]);
 
+  // Set the queue that filters the swiped users
   useEffect(() => {
+    if (!user) return;
+
     const q = query(collection(db, "users"), where("newUser", "==", false));
 
-    const fetchUsers = async () => {
-      setLoading(true);
-      const querySnapshot = await getDocs(q);
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const usersData: UserProfile[] = [];
-      querySnapshot.forEach((doc) => {
-        if (doc.id !== user?.uid && !swipedUsers.includes(doc.id)) {
+      snapshot.forEach((doc) => {
+        if (doc.id !== user.uid && !swipedUsers.includes(doc.id)) {
           usersData.push({ id: doc.id, ...doc.data() } as UserProfile);
         }
       });
       setQueue(usersData);
       setLoading(false);
-    };
+    });
 
-    fetchUsers();
+    return () => unsubscribe();
   }, [user?.uid, swipedUsers]);
 
   async function handlePass() {
@@ -92,6 +96,7 @@ export default function Home() {
       const [first, ...rest] = queue;
       setQueue(rest);
 
+      // Add person X to the passes of the current user
       try {
         await updateDoc(doc(db, "users", user.uid), {
           passes: arrayUnion(first.id),
@@ -112,12 +117,13 @@ export default function Home() {
       setQueue(rest);
 
       try {
+        // Add person X to the likes of current user
         await updateDoc(doc(db, "users", user.uid), {
           likedUsers: arrayUnion(first.id),
         });
 
+        // If it's a match
         if (first.likedUsers.includes(user.uid)) {
-          // It's a match!
           toast.success(`It's a match with ${first.name}!`);
 
           // Create a match document
@@ -152,16 +158,14 @@ export default function Home() {
               </p>
             </div>
           ) : (
-            <div className="md:grid grid-cols-2 bg-white rounded-xl w-80/100 xs:w-80 sm:w-80 md:w-80/100 lg:w-70/100 2xl:w-55/100 justify-center items-center">
+            <div className="md:grid grid-cols-2 bg-white rounded-xl w-85/100 md:w-70/100 lg:w-80/100 justify-center items-center">
               <div className="">
-                {queue.length > 0 ? (
+                {queue.length > 0 && (
                   <img
                     src={queue[0].photoURL}
                     alt={queue[0].name}
-                    className="ltr rounded-tl-xl rounded-tr-xl md:rounded-tr-none md:rounded-s-xl w-full"
+                    className="ltr rounded-tl-xl rounded-tr-xl md:rounded-tr-none md:rounded-s-xl w-full h-100 md:h-120 xl:h-150 object-cover"
                   />
-                ) : (
-                  <p className="text-xl p-5">No users available</p>
                 )}
               </div>
               <div className=" p-5 flex flex-col justify-center ">

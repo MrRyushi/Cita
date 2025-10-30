@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 import React, { useEffect, useState } from "react";
 import { auth, db } from "../../../firebase/firebase";
@@ -27,7 +26,6 @@ type UserProfile = {
 };
 
 const Profile = () => {
-  const user = auth.currentUser;
   const [userData, setUserData] = useState<UserProfile>();
   const [editing, setEditing] = useState(false);
   const [photoURL, setPhotoURL] = useState("");
@@ -35,10 +33,9 @@ const Profile = () => {
   const [photoFilename, setPhotoFilename] = useState("No image");
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
-  const [refreshKey, setRefreshKey] = useState(0);
 
+  // Fetch the current user's profile
   useEffect(() => {
-    // Fetch user data from Firestore or any other source
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (!user) return;
       const docRef = doc(db, "users", user.uid);
@@ -47,7 +44,6 @@ const Profile = () => {
       if (docSnap.exists()) {
         setUserData(docSnap.data() as UserProfile);
       } else {
-        // docSnap.data() will be undefined in this case
         console.log("No such document!");
       }
     });
@@ -75,15 +71,16 @@ const Profile = () => {
   }
 
   async function saveProfileChanges() {
-    // Implement save logic here
     try {
       const user = auth.currentUser;
       if (!user) throw new Error("No authenticated user");
 
+      // check first if there's updated input, or get the existing details
       const updatedName = name || userData?.name || "";
       const updatedBio = bio || userData?.bio || "";
       const updatedPhotoURL = photoURL || userData?.photoURL || "";
 
+      // update details on firestore
       await setDoc(
         doc(db, "users", user.uid),
         {
@@ -97,7 +94,6 @@ const Profile = () => {
       clearValues();
       toast.success("Profile updated successfully!");
 
-      setRefreshKey((prev) => prev + 1);
     } catch (e: unknown) {
       if (e instanceof Error) {
         toast.error(e.message);
@@ -120,6 +116,7 @@ const Profile = () => {
         <div className="p-10 rounded-lg bg-white shadow-lg">
           {!editing && <Pencil className="" onClick={() => setEditing(true)} />}
 
+          {/* Front page / Profile */}
           {userData && !editing ? (
             <div className="sm:p-6">
               <div className="flex flex-col items-center">
@@ -141,9 +138,10 @@ const Profile = () => {
                   </span>
                 </div>
               </div>
-            </div>
+            </div> 
           ) : userData && editing ? (
             <div>
+              {/* Back page / Edit Form */}
               <form
                 className="space-y-4"
                 onSubmit={(e) => {

@@ -1,18 +1,17 @@
 "use client";
 import { auth, db } from "@/firebase/firebase";
-import { match } from "assert";
 import { onAuthStateChanged } from "firebase/auth";
 import {
   addDoc,
   collection,
   getDocs,
   query,
-  setDoc,
   Timestamp,
   doc,
   where,
   updateDoc,
   onSnapshot,
+  orderBy,
 } from "firebase/firestore";
 import { ArrowLeft, Send } from "lucide-react";
 import React, { useEffect, useState } from "react";
@@ -43,11 +42,14 @@ const Messages = () => {
   const user = auth.currentUser;
   const [matches, setMatches] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  // stores the uid of the opened chat
   const [chatOpened, setChatOpened] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageInput, setMessageInput] = useState("");
+  // state variables for mobile compatibility / responsiveness
   const [isChatOpened, setIsChatOpened] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
+  // for auto scroll purposes
   const messagesContainerRef = React.useRef<HTMLDivElement | null>(null);
   const messagesEndRef = React.useRef<HTMLDivElement | null>(null);
 
@@ -130,23 +132,22 @@ const Messages = () => {
     return () => unsubscribeAuth();
   }, []);
 
+  // auto scroll purposes when sending a message
   useEffect(() => {
     if (messagesContainerRef.current) {
       const container = messagesContainerRef.current;
-      container.scrollTop = container.scrollHeight - 50; // try 50px offset
+      container.scrollTop = container.scrollHeight - 50;
     }
   }, [messages]);
 
+  // This sets the boolean state isMobileView when screen size changes
   useEffect(() => {
-    // Match screens 425px wide or less
     const mediaQuery = window.matchMedia("(max-width: 767px)");
 
-    // Handler when screen size changes
     const handleChange = (e: MediaQueryListEvent | MediaQueryList) => {
       setIsMobileView(e.matches);
     };
 
-    // Initial check
     setIsMobileView(mediaQuery.matches);
 
     // Add listener (using correct API depending on browser support)
@@ -171,26 +172,25 @@ const Messages = () => {
     if (!user) return;
 
     // Fetch messages for the selected match
-    const getMessages = async () => {
-      const q = query(collection(db, "chats", matchId, "messages"));
-
-      const querySnapshot = await getDocs(q);
+    const q = query(
+      collection(db, "chats", matchId, "messages"),
+      orderBy("createdAt", "asc")
+    );
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const messagesData: Message[] = [];
       querySnapshot.forEach((doc) => {
-        if (!doc.exists()) return;
         messagesData.push({
           senderId: doc.data().senderId,
           text: doc.data().text,
           createdAt: doc.data().createdAt,
         });
       });
-      messagesData.sort(
-        (a, b) => a.createdAt.toMillis() - b.createdAt.toMillis()
-      );
+
       setMessages(messagesData);
-    };
-    getMessages();
+    });
     setChatOpened(matchId);
+
+    return unsubscribe;
   }
 
   function handleSendMessage(matchId: string) {
@@ -205,19 +205,18 @@ const Messages = () => {
 
       try {
         await addDoc(collection(db, "chats", matchId, "messages"), messageData);
+
+        // Update the match with last message info
+        const matchRef = doc(db, "matches", matchId);
+        await updateDoc(matchRef, {
+          lastMessage: messageInput,
+          lastSent: Timestamp.now(),
+        });
+
+        setMessageInput("");
       } catch (e) {
         console.error("Error sending message: ", e);
       }
-
-      // Update the match with last message info
-      const matchRef = doc(db, "matches", matchId);
-      await updateDoc(matchRef, {
-        lastMessage: messageInput,
-        lastSent: Timestamp.now(),
-      });
-      // Refresh messages
-      setMessageInput("");
-      fetchMessages(matchId);
     };
     sendMessage();
   }
@@ -237,6 +236,11 @@ const Messages = () => {
       {(!isMobileView || !isChatOpened) && (
         <div className={`md:col-span-4 lg:col-span-3 bg-white p-2`}>
           <h1 className="text-black text-2xl font-bold">Chats</h1>
+          {matches.length === 0 && (
+            <div className="h-screen flex pb-30 justify-center items-center">
+              <h1>Your first match is one swipe away!</h1>
+            </div>
+          )}
           {matches.map((match) => (
             <div
               key={match.id}

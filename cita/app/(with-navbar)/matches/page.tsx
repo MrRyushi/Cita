@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 import React, { useEffect, useState } from "react";
 import {
@@ -8,6 +7,7 @@ import {
   getDocs,
   doc,
   deleteDoc,
+  onSnapshot,
 } from "firebase/firestore";
 import { db, auth } from "@/firebase/firebase";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,6 @@ import {
 const Matches = () => {
   const user = auth.currentUser;
   const [matches, setMatches] = useState<UserProfile[]>([]);
-  const [matchesIds, setMatchesIds] = useState<{ userId: string; matchId: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -52,47 +51,49 @@ const Matches = () => {
         where("users", "array-contains", user.uid)
       );
 
-      const querySnapshot = await getDocs(q);
-      const matchIds: { userId: string; matchId: string }[] = [];
-      querySnapshot.forEach((doc) => {
-        const otherUserId = doc
-          .data()
-          .users.find((uid: string) => uid !== user.uid);
-        if (otherUserId) {
-          matchIds.push({
-            userId: otherUserId, // the matched user’s UID
-            matchId: doc.id, // the match document ID
+      const unsubscribeMatches = onSnapshot(q, async (querySnapshot) => {
+        const matchIds: { userId: string; matchId: string }[] = [];
+
+        // Get all the matches first of the current user
+        querySnapshot.forEach((doc) => {
+          const otherUserId = doc
+            .data()
+            .users.find((uid: string) => uid !== user.uid);
+          if (otherUserId) {
+            matchIds.push({
+              userId: otherUserId, // the matched user’s UID
+              matchId: doc.id, // the match document ID
+            });
+          }
+        });
+
+        // Batch fetch matched users' profiles
+        const usersData: UserProfile[] = [];
+        for (let i = 0; i < matchIds.length; i += 10) {
+          const batch = matchIds.slice(i, i + 10);
+          const batchUserIds = batch.map((b) => b.userId);
+
+          const usersQuery = query(
+            collection(db, "users"),
+            where("__name__", "in", batchUserIds)
+          );
+          const usersSnapshot = await getDocs(usersQuery);
+
+          usersSnapshot.forEach((doc) => {
+            const matchObj = matchIds.find((m) => m.userId === doc.id);
+            usersData.push({
+              id: doc.id,
+              matchId: matchObj?.matchId,
+              ...doc.data(),
+            } as UserProfile);
           });
         }
+
+        setMatches(usersData);
+        setLoading(false);
       });
-
-      setMatchesIds(matchIds);
-
-      const usersData: UserProfile[] = [];
-      for (let i = 0; i < matchIds.length; i += 10) {
-        const batch = matchIds.slice(i, i + 10);
-        const batchUserIds = batch.map((b) => b.userId);
-
-        const usersQuery = query(
-          collection(db, "users"),
-          where("__name__", "in", batchUserIds)
-        );
-        const usersSnapshot = await getDocs(usersQuery);
-
-        usersSnapshot.forEach((doc) => {
-          const matchObj = matchIds.find((m) => m.userId === doc.id);
-          usersData.push({
-            id: doc.id,
-            matchId: matchObj?.matchId,
-            ...doc.data(),
-          } as UserProfile);
-        });
-      }
-
-      setMatches(usersData);
-      setLoading(false);
+      return unsubscribeMatches();
     });
-
     return () => unsubscribeAuth();
   }, []);
 
@@ -128,11 +129,14 @@ const Matches = () => {
   return (
     <div className="flex flex-row justify-center items-center">
       <div className="p-10">
-        <h1 className="text-2xl font-bold mb-4 text-white">Your Matches</h1>
+        {/* Display if no user has no matches yet */}
         {matches.length === 0 ? (
-          <p className="text-white">No matches yet. Keep swiping!</p>
+          <div className="flex flex-row h-screen items-center justify-center pb-30">
+            <p className="text-white">No matches yet. Keep swiping!</p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <h1 className="text-2xl font-bold mb-4 text-white">Your Matches</h1>
             {matches.map((match) => (
               <Popover key={match.id}>
                 <PopoverTrigger

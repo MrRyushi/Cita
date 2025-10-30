@@ -55,11 +55,13 @@ const Onboarding = () => {
       const user = auth.currentUser;
       if (!user) throw new Error("No authenticated user");
 
+      // Validate each field to have a value
       if (!name || !age || !sex || !into || !bio || !photoURL) {
         toast.error("Please fill in all fields");
         return;
       }
 
+      // Set the details of the user in Firebase
       await setDoc(
         doc(db, "users", user.uid),
         {
@@ -78,6 +80,7 @@ const Onboarding = () => {
       setTimeout(() => {
         router.push("/");
       }, 1500);
+
     } catch (e) {
       console.error("Error updating document:", e);
     }
@@ -174,18 +177,6 @@ const Onboarding = () => {
                     {loading ? "Uploading..." : photoFilename}
                   </div>
                 </FieldLabel>
-
-                {/*preview && (
-                <Image
-                  src={preview}
-                  alt="Profile Preview"
-                  width={128}
-                  height={128}
-                  sizes="128px"
-                  className=""
-                  unoptimized
-                />
-              )*/}
               </Field>
             }
             <Field>

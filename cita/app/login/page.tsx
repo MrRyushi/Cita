@@ -22,53 +22,43 @@ const Login = () => {
   async function signIn(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     try {
-      // sign in the user using firebase function
-      await signInWithEmailAndPassword(auth, email, password);
-      // alert frontend
-      setAlertTitle("Successfully Logged In!");
-      setAlertDescription(
-        "All set! Your next match might just be a click away"
+      // Attempt sign in
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
       );
+      const user = userCredential.user;
+      if (!user) throw new Error("User authentication failed");
+
+      // Fetch user data
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+      const userData = userSnap.data();
+
+      // Handle new or returning users
+      const nextRoute = userData?.newUser ? "/onboarding" : "/";
+      router.push(nextRoute);
+
+      // Show success alert
+      setAlertTitle("Successfully Logged In!");
+      setAlertDescription("All set! Your next match might just be a click away");
       setShowAlert(true);
       setAlertType("success");
-
-      const userId = auth.currentUser?.uid;
-
-      if (!userId) {
-        console.error("User not authenticated");
-        return;
-      }
-
-      const docRef = doc(db, "users", userId);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        // do something
-      } else {
-        
-        console.log("No such document!");
-      }
-  
-      if(docSnap.data()?.newUser){
-        router.push("/onboarding");  
-      } else {
-        router.push("/")
-      }
-
+      
     } catch (err) {
       console.log(err);
-
-      // alert frontend
-      setAlertTitle("Login Failed");
-      setAlertType("error");
       let message = "An unexpected error occurred";
+
       type FirebaseAuthError = {
         code?: string;
         message?: string;
       };
+
       const anyErr = err as FirebaseAuthError;
       const code =
         anyErr && typeof anyErr === "object" ? anyErr.code : undefined;
+
       if (typeof code === "string") {
         switch (code) {
           case "auth/invalid-credential":
@@ -81,7 +71,6 @@ const Login = () => {
             message = anyErr?.message || message;
         }
       } else {
-        // alert frontend
         message =
           typeof err === "string"
             ? err
@@ -89,6 +78,9 @@ const Login = () => {
             ? err.message
             : message;
       }
+      
+      setAlertTitle("Login Failed");
+      setAlertType("error");
       setAlertDescription(message);
       setShowAlert(true);
     }
