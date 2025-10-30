@@ -259,7 +259,7 @@ const Messages = () => {
             >
               <img
                 src={match.photoURL}
-                className="w-10 h-10 rounded-full"
+                className="w-10 h-10 rounded-full object-cover"
                 alt="User Photo"
               />
               <div>
@@ -277,7 +277,7 @@ const Messages = () => {
         <div className="col-span-6 lg:col-span-7 h-screen flex flex-col">
           {/* Chat Header */}
           {chatOpened && (
-            <div className="flex flex-row shadow-2xl px-4 py-2 items-center">
+            <div className="flex flex-row shadow-lg px-4 py-2 items-center">
               {isMobileView && (
                 <button
                   className="w-12"
@@ -293,7 +293,7 @@ const Messages = () => {
                   matches.find((match) => match.matchId === chatOpened)
                     ?.photoURL
                 }
-                className="w-10 h-10 rounded-full me-3"
+                className="w-10 h-10 rounded-full me-3 object-cover"
                 alt="User Photo"
               />
               <h2 className=" text-2xl font-bold">
