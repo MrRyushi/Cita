@@ -32,6 +32,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { ModeToggle } from "@/components/ModeToggle";
 
 const Matches = () => {
   const user = auth.currentUser;
@@ -53,7 +54,6 @@ const Matches = () => {
 
       const unsubscribeMatches = onSnapshot(q, async (querySnapshot) => {
         const matchIds: { userId: string; matchId: string }[] = [];
-
         // Get all the matches first of the current user
         querySnapshot.forEach((doc) => {
           const otherUserId = doc
@@ -92,7 +92,7 @@ const Matches = () => {
         setMatches(usersData);
         setLoading(false);
       });
-      return unsubscribeMatches();
+      return () => unsubscribeMatches();
     });
     return () => unsubscribeAuth();
   }, []);
@@ -127,7 +127,10 @@ const Matches = () => {
     );
 
   return (
-    <div className="flex flex-row justify-center items-center">
+    <div className="flex flex-col justify-center items-center">
+      <div className="absolute top-3 left-3">
+        <ModeToggle/>
+      </div>
       <div className="p-10">
         {/* Display if no user has no matches yet */}
         {matches.length === 0 ? (
@@ -135,40 +138,43 @@ const Matches = () => {
             <p className="text-white">No matches yet. Keep swiping!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <h1 className="text-2xl font-bold mb-4 text-white">Your Matches</h1>
-            {matches.map((match) => (
-              <Popover key={match.id}>
-                <PopoverTrigger
-                  key={match.id}
-                  className="rounded-lg p-4 shadow-lg bg-white"
-                >
-                  <img
-                    src={match.photoURL || "/default-profile.png"}
-                    alt={match.name}
-                    className="w-full md:h-48 lg:h-48 xl:h-55 object-cover rounded-md mb-4"
-                  />
-                  <h2 className="text-xl font-semibold">
-                    {match.name}, {match.age}
-                  </h2>
-                  <p className="">{match.bio}</p>
-                </PopoverTrigger>
+          <div>
+            <h1 className="text-2xl font-bold mb-4 text-pink-600">Your Matches</h1>
 
-                <PopoverContent className="bg-white flex flex-row space-x-2 rounded-lg shadow-lg justify-center items-center">
-                  <label className="font-bold">Unmatch {match.name}?</label>
-                  <Button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleUnmatch(match.matchId, match.name);
-                    }}
-                    variant="destructive"
-                    className="text-white bg-red-600 hover:bg-red-500"
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {matches.map((match) => (
+                <Popover key={match.id}>
+                  <PopoverTrigger
+                    key={match.id}
+                    className="rounded-lg p-4 shadow-xl border border-pink-600"
                   >
-                    Yes
-                  </Button>
-                </PopoverContent>
-              </Popover>
-            ))}
+                    <img
+                      src={match.photoURL || "/default-profile.png"}
+                      alt={match.name}
+                      className="w-full md:h-48 lg:h-48 xl:h-55 object-cover rounded-md mb-4"
+                    />
+                    <h2 className="text-xl font-semibold">
+                      {match.name}, {match.age}
+                    </h2>
+                    <p className="">{match.bio}</p>
+                  </PopoverTrigger>
+
+                  <PopoverContent className="lex flex-row space-x-2 rounded-lg shadow-lg justify-center items-center">
+                    <label className="font-bold">Unmatch {match.name}?</label>
+                    <Button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleUnmatch(match.matchId, match.name);
+                      }}
+                      variant="destructive"
+                      className="text-white bg-red-500 hover:bg-red-600"
+                    >
+                      Yes
+                    </Button>
+                  </PopoverContent>
+                </Popover>
+              ))}
+            </div>
           </div>
         )}
       </div>

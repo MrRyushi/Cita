@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Venus, Mars, X, Check } from "lucide-react";
 import { onAuthStateChanged, User } from "firebase/auth";
+import { ModeToggle } from "@/components/ModeToggle";
 
 type UserProfile = {
   name: string;
@@ -144,11 +145,14 @@ export default function Home() {
   return (
     <AuthGuard>
       <div className="w-full h-screen pb-10 flex flex-col justify-center items-center">
+        <div className="absolute top-3 left-3">
+          <ModeToggle/>
+        </div>
         <div className="space-y-3 flex justify-center items-center flex-col">
           {loading ? (
-            <p className="text-xl text-white">Loading Profiles...</p>
+            <p className="text-xl">Loading Profiles...</p>
           ) : queue.length === 0 ? (
-            <div className="bg-white rounded-xl mx-10 sm:mx-0 p-10 flex flex-col justify-center items-center">
+            <div className="rounded-xl mx-10 sm:mx-0 p-10 flex flex-col justify-center items-center">
               <p className="text-xl sm:text-2xl font-bold mb-4 text-center">
                 No more users available
               </p>
@@ -158,7 +162,7 @@ export default function Home() {
               </p>
             </div>
           ) : (
-            <div className="md:grid grid-cols-2 bg-white rounded-xl w-85/100 md:w-70/100 lg:w-80/100 justify-center items-center">
+            <div className="bg-rose-900 md:grid grid-cols-2 rounded-xl w-85/100 md:w-70/100 lg:w-80/100 justify-center items-center">
               <div className="">
                 {queue.length > 0 && (
                   <img
@@ -171,14 +175,14 @@ export default function Home() {
               <div className=" p-5 flex flex-col justify-center ">
                 {queue.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-2xl font-bold">
+                    <p className="text-2xl font-bold text-white">
                       {queue[0].name}, {queue[0].age}
                     </p>
-                    <Badge className="uppercase bg-black text-white ps-2 pe-3 py-1">
+                    <Badge className="uppercase ps-2 pe-3 py-1 bg-pink-600 text-white">
                       {queue[0].sex === "man" ? <Mars /> : <Venus />}
                       {queue[0].sex}
                     </Badge>
-                    <p>{queue[0].bio}</p>
+                    <p className="text-white">{queue[0].bio}</p>
                   </div>
                 )}
               </div>
@@ -189,13 +193,13 @@ export default function Home() {
             <div className="flex flex-row justify-center items-center space-x-10">
               <button
                 onClick={handlePass}
-                className="bg-[#FCC8D1] hover:bg-pink-200 w-15 h-15 md:w-20 md:h-20 rounded-full py-2 flex justify-center items-center"
+                className="bg-red-800 hover:bg-red-700 w-15 h-15 md:w-20 md:h-20 rounded-full py-2 text-white flex justify-center items-center"
               >
                 <X size={30} />
               </button>
               <button
                 onClick={handleLike}
-                className="bg-red-900 hover:bg-red-800 w-15 h-15 md:w-20 md:h-20 rounded-full py-2 text-white flex justify-center items-center"
+                className="bg-pink-800 hover:bg-pink-700 w-15 h-15 md:w-20 md:h-20 rounded-full py-2 text-white flex justify-center items-center"
               >
                 <Check size={30} />
               </button>

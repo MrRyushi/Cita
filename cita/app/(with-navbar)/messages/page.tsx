@@ -1,4 +1,5 @@
 "use client";
+import { ModeToggle } from "@/components/ModeToggle";
 import { auth, db } from "@/firebase/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import {
@@ -225,17 +226,20 @@ const Messages = () => {
   if (loading)
     return (
       <div className="flex flex-col justify-center items-center h-screen pb-20">
-        <p className="text-white text-center text-xl">Loading messages...</p>
+        <p className="text-center text-xl">Loading messages...</p>
       </div>
     );
 
   return (
     <div className={`md:grid md:grid-cols-10`}>
+      <div className="absolute top-3 left-3">
+        <ModeToggle/>
+      </div>
       {/* Matches List */}
       {/* If mobile view, only show matches list when chat is not opened */}
       {(!isMobileView || !isChatOpened) && (
-        <div className={`md:col-span-4 lg:col-span-3 bg-white p-2`}>
-          <h1 className="text-black text-2xl font-bold">Chats</h1>
+        <div className={`md:col-span-4 lg:col-span-3 p-2`}>
+          <h1 className="text-2xl font-bold">Chats</h1>
           {matches.length === 0 && (
             <div className="h-screen flex pb-30 justify-center items-center">
               <h1>Your first match is one swipe away!</h1>
@@ -249,8 +253,8 @@ const Messages = () => {
                 fetchMessages(match.matchId);
                 setIsChatOpened(true);
               }}
-              className={`p-2 flex flex-row space-x-4 items-center hover:bg-slate-100 ${
-                chatOpened === match.matchId ? "bg-slate-100" : ""
+              className={`p-2 flex flex-row space-x-4 items-center hover:bg-rose-500 ${
+                chatOpened === match.matchId ? "bg-rose-500" : ""
               }`}
             >
               <img
@@ -259,8 +263,8 @@ const Messages = () => {
                 alt="User Photo"
               />
               <div>
-                <p className="text-black text-xl font-medium">{match.name}</p>
-                <p className="text-black">{match.lastMessage}</p>
+                <p className="text-xl font-medium">{match.name}</p>
+                <p className="">{match.lastMessage}</p>
               </div>
               <hr className="my-2 border-gray-300" />
             </div>
@@ -273,7 +277,7 @@ const Messages = () => {
         <div className="col-span-6 lg:col-span-7 h-screen flex flex-col">
           {/* Chat Header */}
           {chatOpened && (
-            <div className="flex flex-row bg-white shadow-2xl px-4 py-2 items-center">
+            <div className="flex flex-row shadow-2xl px-4 py-2 items-center">
               {isMobileView && (
                 <button
                   className="w-12"
@@ -292,7 +296,7 @@ const Messages = () => {
                 className="w-10 h-10 rounded-full me-3"
                 alt="User Photo"
               />
-              <h2 className="text-black text-2xl font-bold">
+              <h2 className=" text-2xl font-bold">
                 {matches.find((match) => match.matchId === chatOpened)?.name}
               </h2>
             </div>
@@ -317,7 +321,7 @@ const Messages = () => {
                       <div
                         className={`p-2 rounded-lg max-w-xs ${
                           message.senderId === user?.uid
-                            ? "bg-blue-500 text-white"
+                            ? "bg-rose-500 text-white"
                             : "bg-gray-200 text-black"
                         }`}
                       >
@@ -336,7 +340,7 @@ const Messages = () => {
               </div>
 
               {/* Message Input */}
-              <div className="p-4 block border-t border-gray-300 sticky bottom-0 bg-white">
+              <div className="p-4 block border-t border-gray-300 sticky bottom-0">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();

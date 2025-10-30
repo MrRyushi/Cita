@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { onAuthStateChanged } from "firebase/auth";
+import { ModeToggle } from "@/components/ModeToggle";
 
 type UserProfile = {
   name: string;
@@ -93,7 +94,6 @@ const Profile = () => {
       setEditing(false);
       clearValues();
       toast.success("Profile updated successfully!");
-
     } catch (e: unknown) {
       if (e instanceof Error) {
         toast.error(e.message);
@@ -113,7 +113,10 @@ const Profile = () => {
   return (
     <AuthGuard>
       <div className="flex justify-center items-center h-screen pb-20 px-2">
-        <div className="p-10 rounded-lg bg-white shadow-lg">
+        <div className="absolute top-3 left-3">
+          <ModeToggle />
+        </div>
+        <div className="p-10 rounded-lg border-pink-500 border shadow-lg w-90/100 md:w-3/5 lg:w-45/100 xl:w-2/5">
           {!editing && <Pencil className="" onClick={() => setEditing(true)} />}
 
           {/* Front page / Profile */}
@@ -128,17 +131,17 @@ const Profile = () => {
                 <h2 className="text-2xl font-bold mb-2">
                   {userData.name}, {userData.age}
                 </h2>
-                <p className="text-slate-900 mb-4">{userData.bio}</p>
+                <p className="mb-4">{userData.bio}</p>
                 <div className="flex space-x-4">
-                  <span className="px-3 py-1 bg-blue-200 rounded-full capitalize font-medium">
+                  <span className="px-4 py-1 bg-rose-500 rounded-full capitalize font-medium">
                     {userData.sex}
                   </span>
-                  <span className="px-3 py-1 bg-green-200 rounded-full capitalize font-medium">
+                  <span className="px-4 py-1 bg-pink-500 rounded-full capitalize font-medium">
                     Interested in {userData.into}
                   </span>
                 </div>
               </div>
-            </div> 
+            </div>
           ) : userData && editing ? (
             <div>
               {/* Back page / Edit Form */}
@@ -156,7 +159,7 @@ const Profile = () => {
                     placeholder="What is your name?"
                     id="name"
                     name="name"
-                    value={userData.name || name}
+                    value={name}
                     onChange={(e) => setName(e.target.value)}
                   />
                 </Field>
@@ -166,7 +169,7 @@ const Profile = () => {
                     placeholder="Tell us about yourself"
                     id="bio"
                     name="bio"
-                    value={userData.bio || bio}
+                    value={bio}
                     onChange={(e) => setBio(e.target.value)}
                   />
                 </Field>
@@ -186,7 +189,7 @@ const Profile = () => {
                 </Field>
                 <div className="flex justify-end gap-4">
                   <Button
-                    className="bg-red-400 hover:bg-red-500 text-white rounded-lg pt-2"
+                    className="bg-rose-500 hover:bg-rose-600 text-white rounded-lg pt-2"
                     onClick={() => setEditing(false)}
                   >
                     Cancel

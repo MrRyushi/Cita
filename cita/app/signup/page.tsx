@@ -13,6 +13,7 @@ import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CircleAlert, CircleCheck } from "lucide-react";
 import GuestGuard from "@/components/GuestGuard";
+import { ModeToggle } from "@/components/ModeToggle";
 
 const Signup = () => {
   const router = useRouter();
@@ -72,7 +73,7 @@ const Signup = () => {
           photoURL: "",
           likedUsers: [],
           passes: [],
-          newUser: true
+          newUser: true,
         });
         console.log("Document written with ID: ", userCredential.user.uid);
       } catch (e) {
@@ -81,10 +82,8 @@ const Signup = () => {
 
       setTimeout(() => {
         router.push("/login");
-      }, 3000)
-      
+      }, 3000);
     } catch (error: unknown) {
-
       // Set Error Alert
       console.error("Registration error:", error);
       setAlertType("error");
@@ -119,8 +118,11 @@ const Signup = () => {
   return (
     <GuestGuard>
       <div className="w-screen h-screen flex flex-col justify-center items-center">
-        <div className="flex flex-col p-8 bg-white rounded-xl w-4/5 md:w-3/5 lg:w-2/5 xl:w-1/3 space-y-2">
-          <h1 className="font-medium text-2xl text-center">Signup</h1>
+        <div className="absolute top-3 right-3">
+          <ModeToggle />
+        </div>
+        <div className="flex flex-col p-8 rounded-xl w-4/5 md:w-3/5 lg:w-2/5 xl:w-1/3 space-y-2 border-pink-600 border">
+          <h1 className="font-medium text-2xl text-center text-pin">Signup</h1>
           <p className="text-center">Create your account</p>
           <form onSubmit={registerUser} className="flex flex-col space-y-5">
             {showAlert && (
@@ -178,12 +180,12 @@ const Signup = () => {
               />
             </div>
 
-            <button className="bg-[#4b4b4b] py-2 rounded-lg text-white">
+            <button className="bg-pink-700 py-2 rounded-lg text-white">
               Register
             </button>
             <Link
               href="/login"
-              className="text-center text-sm text-blue-500 hover:underline"
+              className="text-center text-sm text-pink-500 hover:underline"
             >
               Already have an account? Login here.
             </Link>
