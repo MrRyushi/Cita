@@ -131,7 +131,7 @@ const Onboarding = () => {
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Sex" />
                 </SelectTrigger>
-                <SelectContent className="">
+                <SelectContent className="bg-white text-black">
                   <SelectItem value="man">Man</SelectItem>
                   <SelectItem value="woman">Woman</SelectItem>
                   <SelectItem value="prefer_not_to_say">
@@ -147,7 +147,7 @@ const Onboarding = () => {
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="You are into?" />
                 </SelectTrigger>
-                <SelectContent className="bg-white">
+                <SelectContent className="bg-white text-black">
                   <SelectItem value="men">Men</SelectItem>
                   <SelectItem value="women">Women</SelectItem>
                   <SelectItem value="everyone">Everyone</SelectItem>
