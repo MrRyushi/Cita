@@ -93,7 +93,7 @@ const Login = () => {
         <div className="absolute top-3 right-3">
           <ModeToggle/>
         </div>
-        <h1 className="text-3xl mb-5">Welcome to <span className="text-pink-600">Cita</span>!</h1>
+        <h1 className="text-3xl mb-5">Welcome to <span className="text-pink-600 dancing-script-font text-5xl">Cita</span>!</h1>
         <div className="flex flex-col p-8 rounded-xl w-4/5 md:w-3/5 lg:w-2/5 xl:w-1/3 space-y-2 border-pink-600 border">
           <h1 className="font-medium text-2xl text-center">Login</h1>
           <form onSubmit={signIn} className="flex flex-col space-y-5">
